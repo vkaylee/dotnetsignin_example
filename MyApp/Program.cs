@@ -1,36 +1,39 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace MyApp;
+
+// Native AOT requires ahead-of-time declaration of types to be serialized to JSON.
+// Instead of the JIT compiling serialization code at runtime, the compiler generates it at build time.
+// Ref: https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/source-generation
+[JsonSerializable(typeof(HealthResponse))]
+internal partial class AppJsonContext : JsonSerializerContext { }
+
+// Ref: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/record
+public readonly record struct HealthResponse(string Status, string Message);
 
 public class Program
 {
     public static void Main(string[] args)
     {
-        var builder = WebApplication.CreateBuilder(args);
+        // CreateSlimBuilder: minimal builder that trims out middleware not needed for Native AOT.
+        // Ref: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis?view=aspnetcore-8.0#createslimbuilder
+        var builder = WebApplication.CreateSlimBuilder(args);
 
-        // Add services to the container.
-        builder.Services.AddRazorPages();
+        // Register the JSON serialization context for AOT - ensures explicit serialization without reflection magic.
+        // Ref: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/native-aot?view=aspnetcore-8.0#the-web-api-native-aot-template
+        builder.Services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonContext.Default);
+        });
 
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline.
-        if (!app.Environment.IsDevelopment())
-        {
-            app.UseExceptionHandler("/Error");
-            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-            app.UseHsts();
-        }
-
-        app.UseHttpsRedirection();
-        app.UseStaticFiles();
-
-        app.UseRouting();
-
-        app.UseAuthorization();
-
-        app.MapRazorPages();
+        // Minimal API routing.
+        // Ref: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis/route-handlers?view=aspnetcore-8.0
+        app.MapGet("/", () => new HealthResponse("ok", "MyApp API is running"));
 
         app.Run();
     }

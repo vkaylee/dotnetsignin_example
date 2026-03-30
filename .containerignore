@@ -1,0 +1,9 @@
+# Exclude build output folders to prevent overriding container build contexts
+**/bin/
+**/obj/
+
+# Exclude git tracking
+.git/
+
+# Exclude local environment secrets
+.env

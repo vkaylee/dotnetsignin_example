@@ -1,9 +1,28 @@
+<!-- Ref: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/native-aot?view=aspnetcore-8.0 -->
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
+    <!-- Ref: https://learn.microsoft.com/en-us/dotnet/standard/frameworks -->
     <TargetFramework>net8.0</TargetFramework>
+
+    <!-- Ref: https://learn.microsoft.com/en-us/dotnet/csharp/nullable-references -->
     <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Disable implicit usings, forcing explicit declaration of all namespaces.
+         Ref: https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props#implicitusings -->
+    <ImplicitUsings>disable</ImplicitUsings>
+
+    <!-- Disable Static Web Assets since this is a pure API that does not serve static files.
+         Ref: https://learn.microsoft.com/en-us/aspnet/core/razor-pages/ui-class?view=aspnetcore-8.0#consume-content-from-a-referenced-rcl -->
+    <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
+
+    <!-- Compile directly to native machine code (Native Binary), entirely removing the JIT runtime.
+         Ref: https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot -->
+    <PublishAot>true</PublishAot>
+
+    <!-- Remove the large ICU globalization library (~30MB) since advanced internationalization is not needed for this API.
+         Ref: https://learn.microsoft.com/en-us/dotnet/core/runtime-config/globalization -->
+    <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
 </Project>
