@@ -43,3 +43,28 @@ services:
     tty: true
     profiles:
       - cli
+
+  db:
+    image: mariadb:11
+    container_name: dotnetsignin-db
+    restart: always
+    command: mariadbd --character-set-server=utf8 --collation-server=utf8_general_ci
+    environment:
+      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-root_secret}
+      - MARIADB_DATABASE=${DB_NAME:-dotnetsignin}
+      - MARIADB_USER=${DB_USER:-dotnet_user}
+      - MARIADB_PASSWORD=${DB_PASSWORD:-dotnet_secret}
+    volumes:
+      - db_data:/var/lib/mysql:Z
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: dotnetsignin-pma
+    restart: always
+    environment:
+      - PMA_HOST=db
+    ports:
+      - "${PMA_PORT:-8080}:80"
+
+volumes:
+  db_data:
