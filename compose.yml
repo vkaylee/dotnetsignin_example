@@ -1,0 +1,45 @@
+services:
+  dotnet-app:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    container_name: dotnetsignin-dev
+    working_dir: /app
+    volumes:
+      - ./:/app:Z
+    ports:
+      - "${APP_PORT:-5000}:5000"
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true
+    command: >
+      bash -c '
+        CS_PROJ=$$(find . -maxdepth 2 -name "*.csproj" | head -n 1)
+        if [ ! -z "$$CS_PROJ" ]; then
+          echo "=> Found project: $$CS_PROJ"
+          cd $$(dirname "$$CS_PROJ")
+          dotnet restore && dotnet watch run --no-launch-profile
+        else
+          echo "========================================"
+          echo " .NET SDK 8.0 Ready"
+          echo " No .csproj found in /app. Create one:"
+          echo "   ./dotnet.sh new webapp -n MyApp"
+          echo "========================================"
+          tail -f /dev/null
+        fi
+      '
+    stdin_open: true
+    tty: true
+
+  dotnet:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    working_dir: /app
+    environment:
+      - DOTNET_CLI_TELEMETRY_OPTOUT=1
+      - HOME=/tmp
+    volumes:
+      - ./:/app:Z
+    entrypoint: ["dotnet"]
+    stdin_open: true
+    tty: true
+    profiles:
+      - cli

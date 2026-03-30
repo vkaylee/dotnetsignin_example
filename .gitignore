@@ -1,0 +1,23 @@
+# Node
+node_modules/
+
+# Dotnet Core
+bin/
+obj/
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+.vs/
+.vscode/
+
+# Environment configs
+.env
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# macOS
+.DS_Store
