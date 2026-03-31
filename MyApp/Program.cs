@@ -26,6 +26,7 @@ namespace MyApp;
 [JsonSerializable(typeof(RegisterResponse))]
 [JsonSerializable(typeof(LoginRequest))]
 [JsonSerializable(typeof(LoginResponse))]
+[JsonSerializable(typeof(AuthCheckResponse))]
 internal partial class AppJsonContext : JsonSerializerContext { }
 
 // Ref: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/record
@@ -34,6 +35,7 @@ public readonly record struct RegisterRequest(string Email, string Password);
 public readonly record struct RegisterResponse(string Status, string Message);
 public readonly record struct LoginRequest(string Email, string Password);
 public readonly record struct LoginResponse(string Status, string Token);
+public readonly record struct AuthCheckResponse(string Status, string Email);
 
 public class Program
 {
@@ -99,6 +101,24 @@ public class Program
                 ValidateIssuer = false,
                 ValidateAudience = false
             };
+
+            // CUSTOM ERROR RESPONSE: Intercept 401 Unauthorized to return a unified JSON layout instead of an empty body.
+            options.Events = new JwtBearerEvents
+            {
+                OnChallenge = async context =>
+                {
+                    // Block the default ASP.NET Core behavior (which returns an empty body)
+                    context.HandleResponse();
+
+                    // Craft our unified JSON response
+                    context.Response.StatusCode = 401;
+                    context.Response.ContentType = "application/json";
+                    await Microsoft.AspNetCore.Http.HttpResponseWritingExtensions.WriteAsync(
+                        context.Response, 
+                        "{\"status\":\"error\",\"message\":\"Unauthorized! Invalid, missing, or expired JWT Token.\"}"
+                    );
+                }
+            };
         });
 
         builder.Services.AddAuthorization();
@@ -137,7 +157,7 @@ public class Program
             var tokenHandler = new JwtSecurityTokenHandler();
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity([new Claim(ClaimTypes.Email, user.Email)]),
+                Subject = new System.Security.Claims.ClaimsIdentity([new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, user.Email)]),
                 Expires = DateTime.UtcNow.AddHours(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(jwtKey), SecurityAlgorithms.HmacSha256Signature)
             };
@@ -167,6 +187,13 @@ public class Program
             await db.InsertAsync(newUser);
             return Microsoft.AspNetCore.Http.Results.Created($"/users/{newUser.Id}", new RegisterResponse("ok", "User registered successfully."));
         });
+
+        app.MapGet("/auth/check", (System.Security.Claims.ClaimsPrincipal user) =>
+        {
+            // With .RequireAuthorization(), if execution reaches this line, the JWT Token is 100% valid!
+            var email = user.FindFirstValue(System.Security.Claims.ClaimTypes.Email) ?? "Unknown";
+            return Microsoft.AspNetCore.Http.Results.Ok(new AuthCheckResponse("ok", email));
+        }).RequireAuthorization();
 
         app.Run();
     }
