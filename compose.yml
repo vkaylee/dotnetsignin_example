@@ -22,6 +22,8 @@ services:
 
       # Inject connection string from .env for EF Core
       - ConnectionStrings__DefaultConnection=Server=db;Database=${DB_NAME:-dotnetsignin};User=${DB_USER:-dotnet_user};Password=${DB_PASSWORD:-dotnet_secret};
+    depends_on:
+      - db
     command: >
       bash -c '
         CS_PROJ=$$(find . -maxdepth 2 -name "*.csproj" | head -n 1)
@@ -101,6 +103,8 @@ services:
     image: phpmyadmin
     container_name: dotnetsignin-pma
     restart: always
+    depends_on:
+      - db
     environment:
       - PMA_HOST=db
     ports:

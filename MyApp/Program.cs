@@ -6,6 +6,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using LinqToDB;
 using System.Collections.Generic;
+using System.IO;
+using DbUp;
 
 namespace MyApp;
 
@@ -31,6 +33,24 @@ public class Program
         // Load the connection string from environment variables (must be injected via Docker Compose)
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
             ?? throw new InvalidOperationException("Error: ConnectionStrings__DefaultConnection environment variable is not set!");
+
+        // Run DbUp Migrations
+        var upgrader = DbUp.DeployChanges.To
+            .MySqlDatabase(connectionString)
+            .WithScriptsFromFileSystem(Path.Combine(AppContext.BaseDirectory, "Scripts"))
+            .LogToConsole()
+            .Build();
+
+        if (upgrader.IsUpgradeRequired())
+        {
+            var result = upgrader.PerformUpgrade();
+            if (!result.Successful)
+            {
+                Console.WriteLine($"DB Upgrade Failed: {result.Error}");
+                return; // fail fast
+            }
+            Console.WriteLine("DB Upgrade Success");
+        }
 
         // Configure Linq2db to allow Native AOT to use MariaDB connection.
         builder.Services.AddTransient<AppDbContext>(sp => new AppDbContext(connectionString));
