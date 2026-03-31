@@ -30,6 +30,7 @@
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="dbup-mysql" Version="6.1.0" />
     <PackageReference Include="linq2db" Version="5.4.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
     <PackageReference Include="MySqlConnector" Version="2.3.6" />
   </ItemGroup>
 
