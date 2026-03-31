@@ -19,6 +19,9 @@ services:
       # Forces 'dotnet watch' to automatically clean and restart the server without prompting if a major code change is detected.
       # Ref: https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-watch
       - DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true
+
+      # Inject connection string from .env for EF Core
+      - ConnectionStrings__DefaultConnection=Server=db;Database=${DB_NAME:-dotnetsignin};User=${DB_USER:-dotnet_user};Password=${DB_PASSWORD:-dotnet_secret};
     command: >
       bash -c '
         CS_PROJ=$$(find . -maxdepth 2 -name "*.csproj" | head -n 1)
@@ -58,6 +61,9 @@ services:
       # Tells the application it's running in production mode (turns off development Swagger/Logs/Errors).
       # Ref: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/environments
       - ASPNETCORE_ENVIRONMENT=Production
+
+      # Inject connection string from .env for EF Core (Production)
+      - ConnectionStrings__DefaultConnection=Server=db;Database=${DB_NAME:-dotnetsignin};User=${DB_USER:-dotnet_user};Password=${DB_PASSWORD:-dotnet_secret};
     depends_on:
       # Ensure the database starts before the application.
       - db
@@ -68,8 +74,10 @@ services:
     environment:
       - DOTNET_CLI_TELEMETRY_OPTOUT=1
       - HOME=/tmp
+      - ConnectionStrings__DefaultConnection=Server=db;Database=${DB_NAME:-dotnetsignin};User=${DB_USER:-dotnet_user};Password=${DB_PASSWORD:-dotnet_secret};
     volumes:
       - ./:/app:Z
+      - nuget_cache:/tmp:Z
     entrypoint: ["dotnet"]
     stdin_open: true
     tty: true
@@ -100,3 +108,4 @@ services:
 
 volumes:
   db_data:
+  nuget_cache:
