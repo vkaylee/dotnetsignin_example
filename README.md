@@ -1,7 +1,88 @@
 # Example web signin application
 
-## Quick Start Guide: `dotnet.sh`
+## Tech Stack
 
+**Frontend**
+- Angular 21 (TypeScript)
+- Vitest for Unit Testing
+
+**Backend**
+- .NET 8 (C#, Minimal APIs, strictly configured for Native AOT)
+- Linq2db (Ultra-fast lightweight ORM)
+- DbUp (Database migrations via SQL scripts)
+- JWT Authentication & BCrypt Password Hashing
+
+**Database & Infrastructure**
+- MariaDB 11
+- Podman / Podman-Compose (Docker equivalent)
+- Ephemeral Zero-Install CLI Wrappers (`dotnet.sh`, `ng.sh`)
+
+---
+
+## Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone <repo-url>
+   cd dotnetsignin_example
+   ```
+
+2. **Configure Environment**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your specific secrets if necessary
+   ```
+
+3. **Install Dependencies (if you don't have Podman)**
+   The project requires Podman Engine and Podman-Compose. The CLI wrappers can auto-install them for you on supported Linux distros (Debian/Ubuntu, Fedora, Arch):
+   ```bash
+   ./dotnet.sh --info
+   # Accept the installation prompts if podman is not found
+   ```
+
+4. **Start the Development Environment**
+   Brings up the MariaDB database, .NET Backend (auto-restores and watches for changes), and Angular Frontend.
+   ```bash
+   podman-compose up -d dotnet-dev frontend-dev
+   ```
+
+5. **Access the Application**
+   - **Frontend:** `http://localhost:4200`
+   - **Backend API:** `http://localhost:5000`
+   - **phpMyAdmin:** `http://localhost:8080` (Database management)
+
+---
+
+## CLI Wrappers (Zero-Install Host)
+
+This project provides two bash scripts (`dotnet.sh` and `ng.sh`) that act as wrappers for the .NET CLI and Angular/Node CLI respectively. They spin up ephemeral containers to run your commands, keeping your host machine completely clean without needing to install the .NET SDK or Node.js.
+
+### `dotnet.sh` (Backend .NET CLI)
+
+Acts exactly like the standard `dotnet` command.
+
+| Action | Command |
+| :--- | :--- |
+| **Create new app** | `./dotnet.sh new webapp -n MyApp` |
+| **Build app** | `./dotnet.sh build MyApp/` |
+| **Add package** | `cd MyApp && ../dotnet.sh add package System.Text.Json` |
+| **Clean output** | `./dotnet.sh clean MyApp/` |
+| **Run** | *(Use `podman-compose up -d dotnet-dev` instead for hot-reload)* |
+
+### `ng.sh` (Frontend Angular CLI / Node.js)
+
+Acts exactly like the `ng`, `npm`, or `npx` commands.
+
+| Action | Command |
+| :--- | :--- |
+| **Create frontend** | `./ng.sh new Frontend --routing --style=css --ssr=false --skip-git` |
+| **Generate component**| `./ng.sh generate component pages/login` |
+| **Install packages** | `./ng.sh npm install @angular/material` |
+| **Run npx tools** | `./ng.sh npx some-tool` |
+| **Build frontend** | `./ng.sh build` |
+| **Serve** | *(Use `podman-compose up -d frontend-dev` instead for HMR)* |
+
+---
 
 ## Running the Application
 
@@ -36,7 +117,7 @@ This project uses **[DbUp](https://dbup.readthedocs.io/)** (`dbup-mysql` v6) to 
 
 ### How it works
 
-Migrations run **automatically on every app startup** (both dev and prod). No manual `dotnet ef database update` step is needed.
+Migrations run **automatically on every app startup** (both dev and prod). No manual migration commands are needed.
 
 ```
 App starts → DbUp scans MyApp/Scripts/*.sql → Applies any unapplied scripts → App serves requests
