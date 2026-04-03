@@ -1,0 +1,82 @@
+<!-- [Angular vs React — login.html] -->
+<!--
+  In React, this file wouldn't exist independently; it would be the return value (JSX) of the component.
+  In Angular, templates are usually kept in separate HTML files.
+-->
+<div style="padding: 20px;">
+  <!-- 
+    String Interpolation:
+    In React: { mode() === 'login' ? 'Sign In' : 'Register' }
+    In Angular, you use double curly braces {{ ... }}.
+  -->
+  <h2>{{ mode() === 'login' ? 'Sign In' : 'Register' }}</h2>
+
+  <!-- 
+    Conditionals:
+    In React: { errorMessage() && <div style="...">...</div> }
+    In Angular (version 17+), you use the new @if syntax.
+  -->
+  @if (errorMessage()) {
+    <div style="color: red; margin-bottom: 10px;">{{ errorMessage() }}</div>
+  }
+
+  @if (successMessage()) {
+    <div style="color: green; margin-bottom: 10px;">{{ successMessage() }}</div>
+  }
+
+  <!-- 
+    Event Binding:
+    In React: <form onSubmit={onSubmit}>
+    In Angular, you use parenthesis (eventName)="handler()".
+    (ngSubmit) is an Angular-specific event that catches standard form sumbissions.
+  -->
+  <form (ngSubmit)="onSubmit()">
+    <div style="margin-bottom: 10px;">
+      <label for="email" style="display: block;">Email:</label>
+      <!-- 
+        Two-way data binding:
+        In React, controlled inputs require both value and onChange:
+          <input value={email} onChange={e => setEmail(e.target.value)} />
+        In Angular, [(ngModel)] (affectionately called "banana-in-a-box") handles both 
+        property binding (reading the value) and event binding (updating the value on input).
+      -->
+      <input id="email" type="email" [(ngModel)]="email" name="email" required />
+    </div>
+
+    <div style="margin-bottom: 10px;">
+      <label for="password" style="display: block;">Password:</label>
+      <input id="password" type="password" [(ngModel)]="password" name="password" required />
+    </div>
+
+    @if (mode() === 'register') {
+      <div style="margin-bottom: 10px;">
+        <label for="confirmPassword" style="display: block;">Confirm Password:</label>
+        <input id="confirmPassword" type="password" [(ngModel)]="confirmPassword" name="confirmPassword" required />
+      </div>
+    }
+
+    <div style="margin-top: 10px;">
+      <!-- 
+        Property Binding:
+        In React: <button disabled={loading()}>
+        In Angular, you use square brackets [property]="expression" to bind data to an HTML attribute.
+      -->
+      <button type="submit" [disabled]="loading()">
+        {{ loading() ? 'Processing...' : (mode() === 'login' ? 'Sign In' : 'Register') }}
+      </button>
+    </div>
+  </form>
+
+  <div style="margin-top: 20px;">
+    @if (mode() === 'login') {
+      <!-- 
+        Event Binding on clicks:
+        In React: <button onClick={toggleMode}>
+        In Angular: (click)="toggleMode()"
+      -->
+      <button type="button" (click)="toggleMode()">Switch to Register</button>
+    } @else {
+      <button type="button" (click)="toggleMode()">Switch to Sign In</button>
+    }
+  </div>
+</div>

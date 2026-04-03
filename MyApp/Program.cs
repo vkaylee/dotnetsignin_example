@@ -122,6 +122,20 @@ public class Program
         });
 
         builder.Services.AddAuthorization();
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("DefaultCorsPolicy", policy =>
+            {
+                var corsOrigins = builder.Configuration["Cors:AllowedOrigins"];
+                if (!string.IsNullOrWhiteSpace(corsOrigins))
+                {
+                    var origins = corsOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    policy.WithOrigins(origins)
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                }
+            });
+        });
 
         // Configure Linq2db to allow Native AOT to use MariaDB connection.
         builder.Services.AddTransient<AppDbContext>(sp => new AppDbContext(connectionString));
@@ -135,6 +149,7 @@ public class Program
 
         var app = builder.Build();
 
+        app.UseCors("DefaultCorsPolicy");
         app.UseAuthentication();
         app.UseAuthorization();
 

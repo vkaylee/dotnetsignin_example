@@ -27,12 +27,69 @@ podman-compose up -d --build dotnet-prod
 
 ---
 
-## Database Management (MariaDB)
-
+## Database Management (DbUp + MariaDB)
 This environment includes a MariaDB 11 instance ready to go. This project uses **Linq2db** as its lightweight, ultra-fast ORM optimized for Native AOT.
 
 Since Linq2db does not include an automated schema migration tool built-in, database schemas must be managed manually via SQL scripts or by adopting an external migration tool (e.g., DbUp, Flyway) applied directly to the MariaDB instance.
 
+This project uses **[DbUp](https://dbup.readthedocs.io/)** (`dbup-mysql` v6) to manage database schema migrations automatically. DbUp tracks which SQL scripts have already been applied and only runs the ones that are new — similar to how EF Core migrations work, but using plain `.sql` files.
+
+### How it works
+
+Migrations run **automatically on every app startup** (both dev and prod). No manual `dotnet ef database update` step is needed.
+
+```
+App starts → DbUp scans MyApp/Scripts/*.sql → Applies any unapplied scripts → App serves requests
+```
+
+The executed scripts are tracked in a `SchemaVersions` table that DbUp creates automatically in the database.
+
+### Adding a new migration
+
+1. Create a new `.sql` file inside `MyApp/Scripts/` following the naming convention:
+
+   ```
+   MyApp/Scripts/
+   001_CreateUsersTable.sql   ← already applied
+   002_AddProfileColumn.sql   ← new migration (example)
+   ```
+
+   > [!IMPORTANT]
+   > Scripts are executed **in alphabetical/numeric order**. Always prefix filenames with a zero-padded number (`001_`, `002_`, etc.) to guarantee correct ordering.
+
+2. Write your SQL inside the new file:
+
+   ```sql
+   -- MyApp/Scripts/002_AddProfileColumn.sql
+   ALTER TABLE Users ADD COLUMN DisplayName VARCHAR(100) NULL;
+   ```
+
+3. Restart the dev container — DbUp will detect and apply the new script automatically:
+
+   ```bash
+   podman-compose restart dev
+   # or bring up from scratch
+   podman-compose up -d dev
+   ```
+
+4. Check logs to confirm the migration ran:
+
+   ```bash
+   podman logs -f dotnetsignin-dev
+   # Look for: "DB Upgrade Success" or the script name being executed
+   ```
+
+### Rollbacks
+
+DbUp does not support automatic rollbacks. To roll back a change:
+
+- Run a new migration script that undoes the change (e.g., `003_DropProfileColumn.sql`).
+- For development, you can also wipe the database volume and restart:
+
+  ```bash
+  podman-compose down -v   # destroys all data
+  podman-compose up -d dev
+  ```
 
 > [!TIP]
 > Ensure you have copied `.env.example` to `.env` before bringing up the environment to configure your secure database passwords!

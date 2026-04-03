@@ -1,0 +1,45 @@
+<!-- [Angular vs React — home.html] -->
+<div style="padding: 20px;">
+  <nav style="margin-bottom: 20px;">
+    <strong>DotNetSignIn</strong>
+    <!-- 
+      Event Binding:
+      In React: onClick={onLogout}
+      In Angular: (click)="onLogout()" (notice you must include the parenthesis '()' to call the method)
+    -->
+    <button (click)="onLogout()" style="margin-left: 20px;">Sign Out</button>
+  </nav>
+
+  <main>
+    <!-- 
+      Conditionals (if/else-if/else):
+      In React, chaining conditions often involves ternary operators:
+        {loading() ? <p>...</p> : error() ? <p>...</p> : <div>...</div>}
+      In Angular (version 17+), the @if / @else if / @else control flow makes it very readable.
+    -->
+    @if (loading()) {
+      <p>Verifying session...</p>
+    } @else if (error()) {
+      <p style="color: red;">{{ error() }}</p>
+    } @else {
+      <div style="margin-bottom: 20px;">
+        <h1>Welcome!</h1>
+        <!-- 
+          Data Binding via String Interpolation:
+          Evaluating the public authService method here directly in the template.
+        -->
+        <p><strong>Email:</strong> {{ authService.userEmail() }}</p>
+        <p><strong>Status:</strong> Authenticated</p>
+      </div>
+
+      <div>
+        <h3>Security Info</h3>
+        <ul>
+          <li><strong>JWT Token:</strong> Secured with JSON Web Token (HS256)</li>
+          <li><strong>Session Expires:</strong> Valid for 1 hour from login</li>
+          <li><strong>API Connected:</strong> .NET 8 Native AOT backend</li>
+        </ul>
+      </div>
+    }
+  </main>
+</div>

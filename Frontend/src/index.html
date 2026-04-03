@@ -1,0 +1,27 @@
+<!-- [Angular vs React — index.html] -->
+<!-- 
+  In React (e.g. Create React App or Vite), you typically have an empty div:
+    <div id="root"></div>
+  And then React mounts your application into that div via createRoot(el).render(<App />).
+
+  In Angular, the application is bootstrapped using a custom HTML element that matches 
+  the selector of the root component (defined in app.ts).
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Frontend</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <!-- 
+    This is the entry point for the Angular application.
+    Angular finds this tag and replaces it with the template of the App component (app.html).
+    Similar to how React mounts <App /> to document.getElementById('root').
+  -->
+  <app-root></app-root>
+</body>
+</html>
