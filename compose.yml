@@ -163,6 +163,8 @@ services:
       - db
     environment:
       - PMA_HOST=db
+      - PMA_USER=root
+      - PMA_PASSWORD=${DB_ROOT_PASSWORD:-root_secret}
     ports:
       - "${PMA_PORT:-8080}:80"
 
